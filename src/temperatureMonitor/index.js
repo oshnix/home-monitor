@@ -29,7 +29,17 @@ async function subscribe(connection) {
 		await getData();
 		intervalDescriptor = setInterval(async () => {
 			subscribers.forEach(subscriber => {
-				sendMessage(subscriber, previousMeasurement);
+				try {
+					// TODO use named constant from WS
+					if (subscriber.readyState === 1) {
+						sendMessage(subscriber, previousMeasurement);
+					} else {
+						throw new Error('Connection not opened');
+					}
+				} catch (e) {
+					console.info('Error when sending data', e);
+					subscribers.delete(subscriber);
+				}
 			})
 		}, timeout);
 	}
