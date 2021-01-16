@@ -28,6 +28,7 @@ async function subscribe(connection) {
 	if (subscribers.size === 0) {
 		await getData();
 		intervalDescriptor = setInterval(async () => {
+			await getData();
 			subscribers.forEach(subscriber => {
 				try {
 					// TODO use named constant from WS
