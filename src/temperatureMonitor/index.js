@@ -1,20 +1,53 @@
 const { init, readCalibration, writeControlAndConfig, readAndCalculate } = require('./busAdapter');
-const { wait } = require('../util');
 
-(async () => {
-	try {
-		await init();
-		await readCalibration();
-		await writeControlAndConfig();
+const moduleName = 'temperature';
+const timeout = 10000;
 
-		while(true) {
-			const { temperature, pressure, humidity } = await readAndCalculate();
-			console.info(`\nTemperature: ${temperature}`);
-			console.info(`Pressure: ${pressure}`);
-			console.info(`Humidity: ${humidity}`);
-			await wait(10000);
-		}
-	} catch (e) {
-		console.error('ERROR', e);
+let previousMeasurement;
+let intervalDescriptor;
+const subscribers = new Set();
+
+function sendMessage(connection, data) {
+	connection.send(JSON.stringify({
+		moduleName,
+		data,
+	}));
+}
+
+async function prepareModule() {
+	await init();
+	await readCalibration();
+	await writeControlAndConfig();
+}
+
+async function getData() {
+	previousMeasurement = await readAndCalculate();
+}
+
+async function subscribe(connection) {
+	if (subscribers.size === 0) {
+		await getData();
+		intervalDescriptor = setInterval(async () => {
+			subscribers.forEach(subscriber => {
+				sendMessage(subscriber, previousMeasurement);
+			})
+		}, timeout);
 	}
-})();
+	sendMessage(connection, previousMeasurement);
+	subscribers.add(connection);
+}
+
+async function unsubscribe(connection) {
+	subscribers.delete(connection);
+
+	if (subscribers.size === 0) {
+		clearInterval(intervalDescriptor);
+	}
+}
+
+module.exports = {
+	moduleName,
+	prepareModule,
+	subscribe,
+	unsubscribe,
+};
