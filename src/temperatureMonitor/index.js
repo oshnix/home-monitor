@@ -8,9 +8,9 @@ const { wait } = require('../util');
 		await writeControlAndConfig();
 
 		while(true) {
-			const { temperature, pressure, humidity, p } = await readAndCalculate();
+			const { temperature, pressure, humidity } = await readAndCalculate();
 			console.info(`\nTemperature: ${temperature}`);
-			console.info(`Pressure: ${pressure}, ${p}`);
+			console.info(`Pressure: ${pressure}`);
 			console.info(`Humidity: ${humidity}`);
 			await wait(10000);
 		}

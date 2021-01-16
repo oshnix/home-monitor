@@ -161,7 +161,7 @@ async function readAndCalculate() {
 	const pressure = calculatePressure(adc_P, tempFine);
 	const humidity = calculateHumidity(adc_H, tempFine)
 
-	return { temperature, pressure: pressure * mercuryMillimeterCoefficient, p: pressure, humidity };
+	return { temperature, pressure: pressure * mercuryMillimeterCoefficient, humidity };
 }
 
 module.exports = {
